@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Loading a Layer 1</title>
+
+  <style>
+    html,
+    body,
+#viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      
+    }
+
+#overviewDiv {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 200px;
+      height: 150px;
+      border: 1px solid black;
+      z-index: 1;
+    }
+    
+#extentDiv {
+      border: 2px solid red;
+      position: absolute;
+      z-index: 2;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/css/main.css">
+
+  <script src="https://js.arcgis.com/4.11/"></script>
+
+  <script>
+    require([ //The modules for the map go here
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/widgets/Legend",
+      "esri/widgets/Search",
+      "esri/core/watchUtils",
+      "dojo/dom",
+      "dojo/promise/all",
+      "esri/widgets/LayerList",
+      "dojo/domReady!"
+    ], function (Map, MapView, FeatureLayer, Legend, Search, watchUtils, dom, all, LayerList
+    //the functions used in the map go here... in the same order as the modules
+    ){ // the variables or constants of the map have to be written bellow
+    
+    // 1. Remember first create a new map
+    	var mymap = new Map ({
+    	//1.a Reference the basemap
+    	basemap: "gray"
+    	});
+    
+    // 2. Create a new MapView
+    	var myview = new MapView ({
+    	//2.a set map instance
+    	map: mymap,
+    	//2.b Reference the ID of a DOM element: the container
+    	container: "viewDiv",
+    	//2.c Center your view
+    	center: [-115.5, 45.5],
+    	//2.d Set the scale of your view
+    	scale: 10000000
+    	});
+    //3. Create a new feature layer. Points to a hosted Feature Layer in ArcGIS Online
+    var counties = FeatureLayer ({
+    	// 3.a Autocasts as esri/portal/PortalItem
+    	portalItem: {
+    	id: "fe98c386b24d410f80fa13b5748081d5"
+    	}
+    	});
+    mymap.add(counties);
+    	
+      var cities = FeatureLayer({
+    	portalItem: {
+    	id: "ec35db599b5c499591ba1ea7f2cec80c"
+    	}
+    	});   	
+    mymap.add (cities);
+    // adds the layer to the map
+    
+    
+    var mylegend = new Legend({
+    view: myview,
+    layerInfos: [{
+    layer: counties,
+    title: "Population"
+    },{
+    layer: cities,
+    title: "Cities"
+    }]
+    });
+    
+     myview.ui.add(mylegend,"bottom-left");
+    
+    var searchWidget = new Search ({
+    view: myview
+    });
+    	
+    	myview.ui.add(searchWidget, {
+    	position: "top-left",
+    	index: -2});
+    	
+ 
+ //create another map for being used in the overview
+  	var overviewmap = new Map ({
+  	basemap: "gray"
+  	});
+  	
+  	//create map view for overview
+  	var smallview = new MapView({
+  	container: "overviewDiv",
+  	map: overviewmap,
+  	constraints: {
+  		rotationEnabled: false
+  		}
+  	});
+  	
+  	// Remove the default widgets
+  	smallview.ui.components = [];
+  	
+  	var ExtentDiv = dom.byId("extentDiv");
+  		
+  		smallview.when(function(){
+  		//update the overview extent
+  		myview.watch("extent", updateOverviewExtent);
+  		smallview.watch("extent", updateOverviewExtent);
+  		
+  		//update the minimap overview when main view is stationary
+  		watchUtils.when(myview, "stationary",
+  		updateoverview);
+  		
+  	function updateoverview(){
+  		smallview.goTo({
+  		center: myview.center,
+  		scale: myview.scale * 2 * Math.max
+  			(myview.width /
+  			smallview.width,
+  			myview.height / smallview.height)
+  		});
+  	}
+  	
+  	function updateOverviewExtent() {
+  	//update overview extent through converting view myview extent using
+    //MapView screen coordinates and updating extentDiv position
+    
+    var extent = myview.extent;
+    
+    var bottomLeft = smallview.toScreen(extent.xmin, extent.ymin);
+    var topRight = smallview.toScreen(extent.xmax, extent.ymax);
+    
+    ExtentDiv.style.top = topRight.y + "px";
+    ExtentDiv.style.left = bottomLeft.x + "px";
+    
+    ExtentDiv.style.height = (bottomLeft.y - topRight.y) + "px";
+    ExtentDiv.style.width = (topRight.x - bottomLeft.x) + "px";
+    
+    }
+    }); 	
+  
+  myview.when(function(){
+  	var layerslisted = new LayerList({
+  	view: myview,
+  	});
+  	
+  	myview.ui.add(layerslisted,{position:"top-left",
+  	index: 3});
+  	});
+});
+  </script>
+</head>
+
+<body class = "calcite">
+  <div id="viewDiv"></div>
+ <div id="overviewDiv">
+  	<div id="extentDiv"></div>
+  </div> 
+</body>
+</html>
