@@ -19,7 +19,16 @@
     "esri/views/MapView"
 ],function(Map, MapView)
     {
-    
+    var webmap = new WebMap({
+        portalItem: { // autocasts as new PortalItem()
+          id: "f4d352e19d194d7fa394a7aafe12e590"
+        }
+      });
+      var view = new MapView({
+        map: webmap,
+        container: "viewDiv"
+      });
+    });
     </script>
 </head>
 <body>
