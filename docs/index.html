@@ -59,7 +59,10 @@ width:100%
             });
         
         var counties = new FeatureLayer ({
-            url: "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/CBSA/MapServer/10"
+            portalItem: {
+    	          id: "f7b0c588ab78492185965a2b68355a89"
+    	},
+        title: "Population density"
         });
         mymap.add(counties);
         
